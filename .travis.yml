@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t alifatov/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run alifatov/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t alifatov/multi-client ./client
+  - docker build -t alifatov/multi-nginx ./nginx
+  - docker build -t alifatov/multi-server ./server
+  - docker build -t alifatov/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docler login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker
+  - docker push alifatov/multi-client
+  - docker push alifatov/multi-nginx
+  - docker push alifatov/multi-server
+  - docker push alifatov/multi-worker
+  
